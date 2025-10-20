@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dükkan</title>
+    <style>
+        :root { --bg-dark: #121212;
+            --bg-panel: #1e1e1e; --border-color: #333; --text-light: #e0e0e0; --text-muted: #aaa; --blue: #007bff; --link-blue: #4dabf5; --red: #e57373; --green: #5cb85c; --input-bg: #333; --input-border: #555;
+            --yellow-dark: #ffc107; /* Sarı eklendi */
+            --dark-blue-text: #66b3ff;
+            /* Kripto başlığı için koyu mavi */
+            --warning-bg: #4a3e2a;
+            /* Uyarı arka planı (Koyu sarı/turuncu) */
+            --warning-text: #ffebcc;
+            /* Uyarı metin rengi */
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        margin: 0; padding: 0; background: var(--bg-dark); color: var(--text-light); }
+        header { background: var(--bg-panel);
+        padding: 15px 30px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
+        }
+        header h1 { margin: 0; font-size: 1.5em; color: #ffffff;
+        }
+        .header-controls { display: flex; align-items: center; gap: 20px;
+        }
+        .timer { font-size: 1.1em; font-weight: 500; color: var(--red);
+        }
+        .support-btn { background: var(--blue); color: white; border: none; padding: 10px 18px;
+        border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 500; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .support-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        .shop-container { max-width: 1200px; margin: 25px auto; padding: 0 20px;
+        }
+        .filter-bar { background: var(--bg-panel); padding: 20px; margin-bottom: 25px; border-radius: 8px;
+        border: 1px solid var(--border-color); }
+        .filter-bar label { font-weight: 500; margin-right: 10px;
+        color: #f5f5f5; }
+        .filter-bar select { padding: 8px; border-radius: 5px;
+        border: 1px solid var(--input-border); font-size: 1em; background: var(--input-bg); color: #f5f5f5;
+        }
+        .shop-category { background: var(--bg-panel); margin-bottom: 30px; border-radius: 10px; border: 1px solid var(--border-color);
+        display: block; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .shop-header { padding: 20px;
+        border-bottom: 1px solid var(--border-color); display: flex; gap: 20px; align-items: flex-start;
+        }
+        .shop-header img { width: 150px; height: 150px; object-fit: cover; border-radius: 6px;
+        border: 1px solid #444; flex-shrink: 0; }
+        .shop-header-info { flex-grow: 1; min-width: 0;
+        }
+        .shop-header-info h2 { padding: 0; border: none; margin: 0; color: #ffffff;
+        font-size: 1.4em; }
+        .shop-description { font-size: 0.9em; color: var(--text-muted); margin-top: 8px; line-height: 1.5;
+        max-height: 6em; overflow-y: auto; padding-right: 8px; display: block; }
+        .shop-header-info .city-tag { font-size: 0.9em;
+        font-weight: 500; color: var(--text-muted); background: var(--input-bg); padding: 5px 10px; border-radius: 5px; display: inline-block; margin-top: 5px;
+        }
+        .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; padding: 25px;
+        }
+        .product { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex;
+        flex-direction: column; background: #2a2a2a; transition: transform 0.2s; }
+        .product:hover { transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .product-image-container { width: 100%;
+        aspect-ratio: 1 / 1; background: #333; display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .product img { display: block; width: 100%; height: 100%; object-fit: cover;
+        }
+        .product-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1;
+        }
+        .product-info h3 { margin: 0 0 10px 0; font-size: 1.15em; color: #ffffff;
+        flex-grow: 1; }
+        .product-info .desc { font-size: 0.9em; color: var(--text-muted); margin-bottom: 12px;
+        line-height: 1.4; max-height: 5.6em; overflow-y: auto; padding-right: 8px; display: block;
+        }
+        .shop-description::-webkit-scrollbar, .product-info .desc::-webkit-scrollbar { width: 6px;
+        }
+        .shop-description::-webkit-scrollbar-track, .product-info .desc::-webkit-scrollbar-track { background: var(--bg-panel); border-radius: 3px;
+        }
+        .shop-description::-webkit-scrollbar-thumb, .product-info .desc::-webkit-scrollbar-thumb { background: #555; border-radius: 3px;
+        }
+        .shop-description::-webkit-scrollbar-thumb:hover, .product-info .desc::-webkit-scrollbar-thumb:hover { background: #777;
+        }
+        .product-info .stock { font-size: 0.9em; margin-bottom: 12px;
+        }
+        .stock.in-stock { color: var(--green); font-weight: 500;
+        }
+        .stock.out-of-stock { color: var(--red); font-weight: 500;
+        }
+        .price { font-size: 1.1em; font-weight: bold; color: var(--link-blue); margin-bottom: 15px; min-height: 1.5em;
+        }
+        .price .price-tl { display: block; font-size: 1.1em; line-height: 1.4; color: var(--text-light);
+        font-weight: bold;}
+
+        .price hr { border-color: #444;
+        margin: 8px 0; }
+        .crypto-label {
+            display: block;
+            font-size: 0.95em;
+            color: var(--dark-blue-text);
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .crypto-price-span {
+            display: block;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: #b0f4a4;
+            background-color: #383838;
+            padding: 5px 8px;
+            margin-top: 4px;
+            border-radius: 4px;
+        }
+
+        .buy-button { background: var(--blue);
+        color: white; text-align: center; padding: 12px; border: none;
+border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; display: block;
+        transition: background-color 0.2s; margin-top: auto;
+}
+        .buy-button.disabled { background: #555; color: var(--text-muted);
+        cursor: not-allowed; pointer-events: none;
+}
+        .shop-header-info h2, .product-info h3, .shop-description, .product-info .desc { word-wrap: break-word;
+        overflow-wrap: break-word;
+word-break: break-word; min-width: 0; }
+
+        /* Modal Stilleri */
+        .modal-overlay { position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-content { background: var(--bg-panel); padding: 25px; border-radius: 10px; max-width: 600px; width: 90%;
+        border: 1px solid var(--border-color); box-shadow: 0 5px 15px rgba(0,0,0,0.5); max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+        padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0;
+        }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;
+        }
+        .modal-body { overflow-y: auto;
+        }
+        .form-group { display: grid; gap: 6px; margin-bottom: 15px;
+        }
+        .form-group label { font-weight: 500; color: #ccc;
+        }
+        .form-group input, .form-group textarea { padding: 12px; border-radius: 6px;
+        border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-light); font-size: 1em; width: 100%; box-sizing: border-box;
+        }
+        #track-submit-btn, #send-message-btn { background: var(--blue); color: white; text-align: center; padding: 12px;
+        border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; text-decoration: none; display: block; width: 100%; transition: background-color 0.2s;
+        }
+        #track-submit-btn:hover, #send-message-btn:hover { opacity: 0.85;
+        }
+        #track-submit-btn:disabled, #send-message-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.7;
+        }
+        .order-details { margin-top: 20px;
+        }
+        .order-details p { font-size: 1.1em; line-height: 1.6;
+        }
+        .order-details strong { color: var(--link-blue);
+        }
+        /* Durum renkleri */
+        .status-Beklemede { color: var(--yellow-dark);
+        font-weight: bold; }
+        .status-Tamamlandı { color: var(--green); font-weight: bold;
+        }
+        .status-İptal { color: var(--red); font-weight: bold;
+        }
+        /* Destek modalındaki Kaydırma Çubukları */
+        .order-messages, .modal-body {
+            scrollbar-width: thin;
+            scrollbar-color: #555 var(--bg-dark);
+        }
+        .order-messages::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 6px;
+        }
+        .order-messages::-webkit-scrollbar-track, .modal-body::-webkit-scrollbar-track { background: var(--bg-dark); border-radius: 3px;
+        }
+        .order-messages::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb { background: #555; border-radius: 3px;
+        }
+        .order-messages::-webkit-scrollbar-thumb:hover, .modal-body::-webkit-scrollbar-thumb:hover { background: #777;
+        }
+
+        .order-messages { max-height: 250px;
+        overflow-y: auto;
+background: var(--bg-dark); padding: 15px; border-radius: 6px; margin-top: 20px; border: 1px solid #444;
+        }
+        .message-item { padding: 8px 0; border-bottom: 1px solid var(--border-color);
+        } .message-item:last-child { border-bottom: none; }
+        .message-item .sender-admin { color: var(--green); font-weight: bold;
+        } .message-item .sender-user { color: var(--link-blue); font-weight: bold; }
+        .message-item .msg-text { color: var(--text-light);
+        margin-top: 5px; display: block; word-wrap: break-word; } .message-item .msg-date { font-size: 0.8em; color: var(--text-muted); margin-top: 5px; display: block;
+        }
+        .modal-error { color: var(--red); text-align: center; font-weight: 500; margin-top: 10px;
+        }
+
+        .communication-warning {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ephemeral Mart</h1>
+        <div class="header-controls">
+            <button class="support-btn" id="support-modal-btn">Destek</button>
+            <div class="timer" id="countdown">Hesaplanıyor...</div>
+        </div>
+    </header>
+    <div class="shop-container">
+        <%
+            let allCities = [];
+            try { const validShops = shops.filter(s => s && s.city && s.city.name);
+                 allCities = [...new Set(validShops.map(s => s.city.name))].sort();
+            } catch (e) {}
+        %>
+        <div class="filter-bar"><label for="city-filter">Şehir:</label><select id="city-filter" onchange="filterByCity()"><option value="all">Tümü</option><% allCities.forEach(c => { %><option value="<%= c %>"><%= c %></option><% }) %></select></div>
+
+        <% shops.forEach((shop) => { %>
+            <% if (shop && shop.city) { %>
+                <section class="shop-category" data-city="<%= shop.city.name %>">
+                    <div class="shop-header">
+                         <% if (shop.imageUrl) { %><img src="<%= shop.imageUrl %>" alt="<%= shop.name %>"><% } %>
+                        <div class="shop-header-info">
+                            <h2><%= shop.name %></h2>
+                            <% if (shop.description) { %><p class="shop-description"><%= shop.description %></p><% } %>
+                            <span class="city-tag"><%= shop.city.name %></span>
+                        </div>
+                    </div>
+                    <div class="product-list">
+                        <% products.forEach((product) => { %>
+                            <% if (product && product.shop && product.shop._id.toString() === shop._id.toString()) { %>
+                                <%
+                                let productCryptos = [];
+                                if (product.availableCryptos && Array.isArray(product.availableCryptos)) {
+                                     productCryptos = product.availableCryptos.map(c => c.symbol).filter(Boolean);
+                                }
+                                %>
+                                <div class="product"
+                                     data-product-id="<%= product._id %>"
+                                     data-price-tl="<%= product.price_tl %>"
+                                     data-cryptos='<%- JSON.stringify(productCryptos) %>'>
+                                    <div class="product-image-container"><% if (product.imageUrl) { %><img src="<%= product.imageUrl %>"><% } %></div>
+                                    <div class="product-info">
+                                        <h3><%= product.name || '?' %></h3>
+                                        <% if (product.description) { %><p class="desc"><%= product.description %></p><% } %>
+                                        <div class="stock <%= product.inStock ? 'in-stock' : 'out-of-stock' %>">
+                                            <%= product.inStock ? "Stokta Var" : "Stok Tükendi" %>
+                                        </div>
+                                        <div class="price" id="price-<%= product._id %>">
+                                            <span class="price-tl"><%= product.price_tl.toFixed(2) %> TL</span>
+                                            <hr>
+                                            <span class="crypto-label">Kripto Ödeme Seçenekleri:</span>
+                                            <span class="loading-text" style="font-size: 0.8em;">Hesaplanıyor...</span>
+                                        </div>
+                                        <a href="/checkout?product_id=<%= product._id %>&token=<%= token %>"
+                                           class="buy-button <%= (!product.inStock || product.price_tl <= 0) ? 'disabled' : '' %>"
+                                           id="buy-btn-<%= product._id %>">
+                                            <%= (!product.inStock || product.price_tl <= 0) ? 'Mevcut Değil' : 'Satın Al' %>
+                                        </a>
+                                    </div>
+                                </div>
+                            <% } %>
+                        <% }) %>
+                    </div>
+                </section>
+            <% } %>
+        <% }) %>
+    </div>
+
+    <div class="modal-overlay" id="support-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>EM Destek</h2>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="communication-warning" id="communication-warning">
+                    Lütfen iletişim halinde iken bu pencereyi kapatmayınız.
+                </div>
+                <form id="track-order-form">
+                    <div class="form-group">
+                        <label for="orderNumberInput">Sipariş Numarası (EM-XXXXXX):</label>
+                        <input type="text" id="orderNumberInput" placeholder="EM-..." required>
+                    </div>
+                    <button type="submit" id="track-submit-btn">Sorgula</button>
+                </form>
+                <div id="modal-error" class="modal-error" style="display: none;"></div>
+                <div id="order-details-container" style="display: none;">
+                    <hr>
+                    <div class="order-details">
+                        <p><strong>Sipariş No:</strong> <span id="modal-order-number"></span></p>
+                        <p><strong>Durum:</strong> <strong id="modal-order-status"></strong></p>
+                        <p><strong>Ürün:</strong> <span id="modal-order-product"></span></p>
+                        <p><strong>Ödeme:</strong> <span id="modal-order-payment"></span></p>
+                    </div>
+                    <h3>Destek Mesajları</h3>
+                    <div class="order-messages" id="modal-messages"></div>
+                    <form id="send-message-form">
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="userMessageInput">Yeni Mesaj:</label>
+                            <textarea id="userMessageInput" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" id="send-message-btn">Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const EXPIRATION_TIMESTAMP = <%= expirationTime %>;
+    const TOKEN = "<%= token %>";
+</script>
+
+<script>
+    // Gerçek Zamanlı Güncelleme için Polling ve Yardımcı Global Değişkenler
+    let liveRatesCache = null;
+    let pollingInterval = null;
+    const POLLING_RATE = 5000; // 5 saniyede bir kontrol
+
+    let currentTrackingOrderId = null;
+    const modal = document.getElementById('support-modal');
+    const orderDetailsContainer = document.getElementById('order-details-container');
+    const modalError = document.getElementById('modal-error');
+    const trackSubmitBtn = document.getElementById('track-submit-btn');
+    const sendMessageBtn = document.getElementById('send-message-btn');
+    const communicationWarning = document.getElementById('communication-warning');
+    const modalOrderStatus = document.getElementById('modal-order-status');
+
+    // 1. MODAL AÇMA FONKSİYONU
+    function openSupportModal() {
+        if (modal) { modal.style.display = 'flex'; }
+        else { console.error('HATA: Modal bileşeni (#support-modal) bulunamadı!'); }
+        if (communicationWarning) communicationWarning.style.display = 'none'; // Başlangıçta gizle
+    }
+
+    // Durum rengini ayarlar
+    function setStatusColor(status) {
+        if (!modalOrderStatus) return;
+        modalOrderStatus.className = ''; // Tüm sınıfları temizle
+        let displayStatus = status;
+        if (status === 'Tamamlandı') displayStatus = 'Ödeme Onaylandı';
+        else if (status === 'İptal') displayStatus = 'İptal Edildi';
+        modalOrderStatus.innerText = displayStatus;
+        modalOrderStatus.classList.add(`status-${status}`); // Sınıfı doğrudan modeldeki status değeriyle eşleştir
+    }
+
+    // 2. DİĞER YARDIMCI FONKSİYONLAR (Senin kodundan alındı)
+    function startPolling(orderNumber) {
+        if (pollingInterval) clearInterval(pollingInterval);
+        fetchOrderDetails(orderNumber);
+        pollingInterval = setInterval(() => {
+            if (!currentTrackingOrderId) {
+                console.log("Polling durduruldu: currentTrackingOrderId boş.");
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                return;
+            }
+            fetchOrderDetails(orderNumber, true);
+        }, POLLING_RATE);
+        console.log(`Polling başlatıldı: Her ${POLLING_RATE / 1000} saniyede bir.`);
+        if (communicationWarning) communicationWarning.style.display = 'block';
+    }
+    function stopPolling() {
+        if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; console.log("Polling durduruldu."); }
+        if (communicationWarning) communicationWarning.style.display = 'none';
+    }
+    async function fetchOrderDetails(orderNumber, isPolling = false) {
+        if (!orderNumber) return;
+        if (!isPolling) {
+            if (trackSubmitBtn) { trackSubmitBtn.disabled = true; trackSubmitBtn.innerText = "Sorgulanıyor..."; }
+            if (modalError) modalError.style.display = 'none';
+            if (orderDetailsContainer) orderDetailsContainer.style.display = 'none';
+            currentTrackingOrderId = null;
+        }
+        try {
+            const response = await fetch(`/api/track-order/${orderNumber}?token=${TOKEN}`);
+            const data = await response.json();
+            if (!response.ok || !data.success) { throw new Error(data.message || 'Sipariş bulunamadı.'); }
+            const order = data.order;
+            currentTrackingOrderId = order._id;
+            if (!isPolling) {
+                if(document.getElementById('modal-order-number')) document.getElementById('modal-order-number').innerText = order.orderNumber;
+                if(document.getElementById('modal-order-product')) document.getElementById('modal-order-product').innerText = order.productName + (order.quantity ? ` (x${order.quantity})` : '');
+                if(document.getElementById('modal-order-payment')) document.getElementById('modal-order-payment').innerText = order.paymentInfo;
+                if (orderDetailsContainer) orderDetailsContainer.style.display = 'block';
+            }
+            setStatusColor(order.status);
+            renderMessages(order.messages || []);
+        } catch (err) {
+            if (!isPolling) {
+                console.error("Sipariş sorgulama hatası:", err);
+                if (modalError) { modalError.innerText = `Hata: ${err.message}`; modalError.style.display = 'block'; }
+                stopPolling();
+            } else { console.warn(`Polling sırasında hata (Sipariş No: ${orderNumber}):`, err.message); }
+        } finally {
+            if (!isPolling) { if (trackSubmitBtn) { trackSubmitBtn.disabled = false; trackSubmitBtn.innerText = "Sorgula"; } }
+        }
+    }
+    function startTimer(t, d) {
+        if (!d || !t) return console.error("Timer başlatılamadı: Eksik parametre.");
+        const i = setInterval(() => {
+            const n = Math.floor(Date.now() / 1000);
+            let r = t - n;
+            if (r <= 0) {
+                clearInterval(i);
+                d.textContent = "Süre Doldu";
+                window.location.href = "/";
+            } else {
+                let m = parseInt(r / 60, 10);
+                let s = parseInt(r % 60, 10);
+                m = m < 10 ? "0" + m : m;
+                s = s < 10 ? "0" + s : s;
+                d.textContent = "Kalan Süre: " + m + ":" + s;
+            }
+        }, 1000);
+    }
+    function filterByCity() {
+        const t = document.getElementById("city-filter").value;
+        const e = document.querySelectorAll(".shop-category");
+        e.forEach(e => { e.style.display = "all" === t || e.dataset.city === t ? "block" : "none" })
+    }
+    async function fetchPricesAndDisplay() { /* ... (Senin kodundan alınan fetchPricesAndDisplay fonksiyonu) ... */
+        console.log("fetchPricesAndDisplay çağrıldı.");
+        try {
+            if (!liveRatesCache) {
+                console.log("Kurlar çekiliyor...");
+                const response = await fetch(`/api/prices?token=${TOKEN}`);
+                if (!response.ok) throw new Error(`Fiyatlar alınamadı (${response.status})`);
+                liveRatesCache = await response.json();
+                console.log("Anlık Kurlar Alındı:", liveRatesCache);
+            }
+            const rates = liveRatesCache;
+            if (typeof rates !== 'object' || Object.keys(rates).length === 0) {
+                console.warn("Kur bilgisi boş veya geçersiz:", rates);
+                document.querySelectorAll('.price .loading-text').forEach(el => el.textContent = 'Kur bilgisi alınamadı');
+                return;
+            }
+            document.querySelectorAll('.product').forEach(productCard => {
+                const priceTl = parseFloat(productCard.dataset.priceTl);
+                const productId = productCard.dataset.productId;
+                const priceElement = document.getElementById(`price-${productId}`);
+                if (!priceTl || !priceElement) return;
+                let productSymbols = [];
+                try {
+                    productSymbols = JSON.parse(productCard.dataset.cryptos || '[]');
+                    if (!Array.isArray(productSymbols)) productSymbols = [];
+                } catch(e) { console.error(`Data-cryptos parse hatası (${productId}):`, e); productSymbols = []; }
+                priceElement.innerHTML = `<span class="price-tl">${priceTl.toFixed(2)} TL</span><hr style="border-color: #444; margin: 8px 0;"><span class="crypto-label">Kripto Ödeme Seçenekleri:</span>`;
+                let hasValidPrice = false;
+                productSymbols.forEach(symbol => {
+                    if (rates[symbol]) {
+                        const cryptoPrice = priceTl / rates[symbol];
+                        if (!isNaN(cryptoPrice)) {
+                            const priceSpan = document.createElement('span');
+                            priceSpan.className = 'crypto-price-span';
+                            priceSpan.innerText = `${cryptoPrice.toFixed(6)} ${symbol}`;
+                            priceElement.appendChild(priceSpan);
+                            hasValidPrice = true;
+                        } else { console.warn(`Uyarı: ${symbol} için fiyat hesaplanamadı (${productId}). Kur: ${rates[symbol]}`); }
+                    } else { console.warn(`Uyarı: ${symbol} için kur bulunamadı (${productId}).`); }
+                });
+                if (!hasValidPrice) {
+                    const errorSpan = document.createElement('span');
+                    errorSpan.innerText = productSymbols.length > 0 ? 'Fiyat hesaplanamadı' : 'Kripto seçeneği yok';
+                    errorSpan.style.fontSize = '0.8em'; errorSpan.style.color = 'var(--text-muted)';
+                    priceElement.appendChild(errorSpan);
+                }
+            });
+            console.log("Fiyatlar güncellendi.");
+        } catch (err) {
+            console.error("Fiyatlar çekilirken hata:", err);
+            document.querySelectorAll('.price').forEach(el => {
+                const tlSpan = el.querySelector('.price-tl');
+                el.innerHTML = tlSpan ? tlSpan.outerHTML : '';
+                el.innerHTML += '<hr style="border-color: #444; margin: 8px 0;"><span class="crypto-label">Kripto Ödeme Seçenekleri:</span>';
+                el.innerHTML += '<span style="color: var(--red); font-size: 0.8em;">Fiyat alınamadı</span>';
+            });
+        }
+     }
+    function renderMessages(messages) { /* ... (Senin kodundan alınan renderMessages fonksiyonu) ... */
+        const messagesContainer = document.getElementById('modal-messages');
+        if (!messagesContainer) return;
+        messagesContainer.innerHTML = '';
+        if (!messages || messages.length === 0) {
+            messagesContainer.innerHTML = '<div class="message-item"><span class="msg-text">Henüz mesaj yok.</span></div>';
+            return;
+        }
+        messages.forEach(msg => {
+            const item = document.createElement('div');
+            item.className = 'message-item';
+            const senderClass = msg.sender === 'admin' ? 'sender-admin' : 'sender-user';
+            const senderName = msg.sender === 'admin' ? 'Destek' : 'Siz';
+            const date = new Date(msg.timestamp || Date.now()).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+            item.innerHTML = `<span class="${senderClass}">${senderName}</span><span class="msg-text">${msg.text}</span><span class="msg-date">${date}</span>`;
+            messagesContainer.appendChild(item);
+        });
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+     }
+
+    // 3. SAYFA YÜKLENİNCE ÇALIŞAN KODLAR
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM yüklendi. Olay dinleyicileri bağlanıyor...");
+
+        // Timer ve Fiyatlar
+        try {
+            const timerElement = document.querySelector('#countdown');
+            if (timerElement && typeof EXPIRATION_TIMESTAMP === 'number' && EXPIRATION_TIMESTAMP > 0) { startTimer(EXPIRATION_TIMESTAMP, timerElement); }
+            else if (!timerElement) { console.error("Timer elementi (#countdown) bulunamadı!"); }
+            else { console.error("EXPIRATION_TIMESTAMP geçersiz:", EXPIRATION_TIMESTAMP); if(timerElement) timerElement.textContent = "Süre Hatası"; }
+        } catch (timerError) { console.error("Timer başlatılırken hata:", timerError); }
+        try { fetchPricesAndDisplay(); } catch(priceError){ console.error("Fiyatlar çekilirken hata (DOMContentLoaded):", priceError); }
+
+        // Modal Elementleri
+        const openBtn = document.getElementById('support-modal-btn');
+        const closeBtn = document.getElementById('modal-close-btn');
+        const trackForm = document.getElementById('track-order-form');
+        const sendMessageForm = document.getElementById('send-message-form');
+
+        // ****** YENİ EKLENEN KOD (ENTER İLE GÖNDERME) ******
+        const messageInput = document.getElementById('userMessageInput');
+        const sendMessageButton = document.getElementById('send-message-btn');
+
+        if (messageInput && sendMessageButton) {
+            console.log("Mesaj input ve gönderme butonu bulundu, keydown listener ekleniyor."); // DEBUG
+            messageInput.addEventListener('keydown', function(event) {
+                // Enter'a basıldı mı? (Shift tuşuna basılmıyorsa)
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    console.log("Enter basıldı (Shift'siz). Gönderme butonuna tıklanıyor."); // DEBUG
+                    event.preventDefault(); // Yeni satır eklemesini engelle
+                    sendMessageButton.click(); // Gönder butonuna tıkla
+                }
+            });
+        } else {
+            console.error("Mesaj input veya gönderme butonu bulunamadı!");
+        }
+        // ****** / YENİ EKLENEN KOD ******
+
+        // Modal Açma Butonu Listener
+        if (openBtn) {
+             console.log("Destek butonu bulundu, click listener ekleniyor."); // DEBUG
+             openBtn.addEventListener('click', openSupportModal);
+        } else { console.error("Destek butonu ('support-modal-btn') bulunamadı!"); }
+
+        // Modal Kapatma Butonu
+        if (closeBtn && modal) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+                modalError.style.display = 'none';
+                orderDetailsContainer.style.display = 'none';
+                if(document.getElementById('orderNumberInput')) { document.getElementById('orderNumberInput').value = ''; }
+                if(messageInput) { messageInput.value = ''; } // Kapatınca mesaj alanını temizle
+                currentTrackingOrderId = null;
+                stopPolling();
+            };
+        }
+
+        // Modal Dışına Tıklama
+        if (modal) {
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                    if(messageInput) { messageInput.value = ''; } // Kapatınca mesaj alanını temizle
+                    stopPolling();
+                }
+            };
+        }
+
+        // Sorgula Formu Submit Listener (Polling Başlatma)
+        if (trackForm) {
+            console.log("Sorgula formu bulundu, submit listener ekleniyor."); // DEBUG
+            trackForm.addEventListener('submit', async (e) => {
+                console.log("Sorgula formu GÖNDERİLDİ."); // DEBUG
+                e.preventDefault();
+                if (!trackSubmitBtn || !modalError || !orderDetailsContainer) { console.error("Sorgulama formu iç elementleri eksik!"); return; }
+                const orderNumberInput = document.getElementById('orderNumberInput');
+                const orderNumber = orderNumberInput ? orderNumberInput.value.trim().toUpperCase() : '';
+                if (!orderNumber) {
+                    if (modalError) { modalError.innerText = 'Lütfen sipariş numarası girin.'; modalError.style.display = 'block'; }
+                    if (trackSubmitBtn) { trackSubmitBtn.disabled = false; trackSubmitBtn.innerText = "Sorgula"; }
+                    return;
+                }
+                startPolling(orderNumber);
+            });
+        } else { console.error("Sipariş Takip Formu ('track-order-form') bulunamadı!"); }
+
+        // Mesaj Gönder Formu Submit Listener
+        if (sendMessageForm) {
+            console.log("Mesaj gönder formu bulundu, submit listener ekleniyor."); // DEBUG
+            sendMessageForm.addEventListener('submit', async (e) => {
+                console.log("Mesaj formu GÖNDERİLDİ."); // DEBUG
+                e.preventDefault();
+                // messageInput zaten yukarıda tanımlanmıştı, tekrar kontrol etmeye gerek yok.
+                if (!sendMessageBtn || !modalError) { console.error("Mesaj formu iç elementleri eksik!"); return; }
+                if (!currentTrackingOrderId) { modalError.innerText = 'Önce sipariş sorgulamalısınız.'; modalError.style.display = 'block'; return; }
+                const userMessage = messageInput ? messageInput.value.trim() : '';
+                if (!userMessage) { modalError.innerText = 'Mesaj boş olamaz.'; modalError.style.display = 'block'; return; }
+
+                modalError.style.display = 'none'; sendMessageBtn.disabled = true; sendMessageBtn.innerText = "Gönderiliyor...";
+                try {
+                    const response = await fetch(`/api/add-message?token=${TOKEN}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: currentTrackingOrderId, userMessage: userMessage }) });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) { throw new Error(data.message || 'Mesaj gönderilemedi.'); }
+                    renderMessages(data.messages || []);
+                    if(messageInput) messageInput.value = '';
+                } catch (err) {
+                    console.error("Mesaj gönderme hatası:", err);
+                    modalError.innerText = `Hata: ${err.message}`;
+                    modalError.style.display = 'block';
+                } finally {
+                    sendMessageBtn.disabled = false;
+                    sendMessageBtn.innerText = "Gönder";
+                }
+            });
+        } else { console.error("Mesaj Gönderme Formu ('send-message-form') bulunamadı!"); }
+    });
+</script>
+
+</body>
+</html>

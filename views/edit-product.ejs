@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ürün Düzenle</title>
+    <style>
+        :root { --bg-dark: #121212;
+            --bg-panel: #1e1e1e; --border-color: #333; --text-light: #e0e0e0; --text-muted: #aaa; --blue: #007bff; --input-bg: #333; --input-border: #555;
+            --link-blue: #4dabf5; --green: #5cb85c;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0; padding: 25px; background-color: var(--bg-dark); color: var(--text-light); }
+        .container { max-width: 800px;
+            margin: 30px auto; padding: 25px; background: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border-color);
+        }
+        h1 { border-bottom: 1px solid var(--border-color); padding-bottom: 15px;
+        }
+        .form-grid { display: grid; gap: 18px;
+        }
+        label { font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 6px; font-size: 0.9em;
+        }
+        input, select, textarea { padding: 12px; border-radius: 6px; border: 1px solid var(--input-border);
+            font-size: 1em; background: var(--input-bg); color: var(--text-light); width: 100%; box-sizing: border-box;
+        }
+        textarea { resize: vertical; min-height: 100px;
+        }
+        button { background-color: var(--blue); color: white; cursor: pointer; border: none;
+            padding: 12px 18px; border-radius: 6px; font-size: 1em; font-weight: 500; }
+        .back-link { color: var(--link-blue);
+            text-decoration: none; display: inline-block; margin-bottom: 20px;}
+
+        /* Stok Toggle */
+        .stock-toggle-container { display: flex; align-items: center; align-self: end; padding-bottom: 0; }
+        .stock-toggle-label { margin: 0 10px 0 0 !important; color: var(--text-light) !important; font-size: 0.9em; font-weight: 500;}
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--green); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--green); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Özel Checkbox */
+        .custom-checkbox-container { display: block; position: relative; padding-left: 30px; cursor: pointer; font-size: 1em; user-select: none; line-height: 20px; padding: 8px 5px 8px 30px; background: var(--bg-dark); border-radius: 4px; margin-bottom: 5px; }
+        .custom-checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        .checkmark { position: absolute; top: 8px; left: 5px; height: 20px; width: 20px; background-color: var(--input-bg); border: 1px solid var(--input-border); border-radius: 4px; transition: background-color 0.2s; }
+        .custom-checkbox-container:hover input ~ .checkmark { background-color: #555; }
+        .custom-checkbox-container input:checked ~ .checkmark { background-color: var(--blue); border-color: var(--blue); }
+        .checkmark:after { content: ""; position: absolute; display: none; }
+        .custom-checkbox-container input:checked ~ .checkmark:after { display: block; }
+        .custom-checkbox-container .checkmark:after { left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+        .custom-checkbox-label { color: var(--text-light); font-weight: normal; margin: 0 !important; display: inline !important; }
+
+        /* ****** MOBİL UYUMLULUK ****** */
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .container {
+                max-width: 95%;
+                padding: 15px;
+                margin-top: 15px;
+                margin-bottom: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+                padding-bottom: 10px;
+            }
+            input, select, textarea, button {
+                font-size: 0.95em;
+                padding: 10px;
+            }
+            .form-grid {
+                gap: 15px;
+            }
+            /* İki sütunlu gridleri tek sütuna düşür */
+            .form-grid > div[style*="grid-template-columns: 1fr 1fr"] {
+                  grid-template-columns: 1fr;
+            }
+            .stock-toggle-container {
+                align-self: flex-start; /* Stok switch'ini sola yasla */
+                margin-top: 10px; /* Üstteki elemanla arasına boşluk koy */
+            }
+            #product-cryptos {
+                 max-height: 120px; /* Kripto listesi yüksekliğini azalt */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin/dashboard" class="back-link">&larr; Panele Geri Dön</a>
+        <h1>Ürünü Düzenle: <%= product.name %></h1>
+
+        <form action="/admin/edit-product/<%= product._id %>" method="POST" class="form-grid">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label for="product-name">Ürün Adı:</label>
+                    <input type="text" id="product-name" name="name" value="<%= product.name %>" required>
+                </div>
+                <div>
+                    <label for="product-shop-select">Dükkan:</label>
+                    <select id="product-shop-select" name="shopId" required>
+                        <option value="">Seçin...</option>
+                        <% shops.forEach(shop => { %>
+                            <option value="<%= shop._id %>" <%= (product.shop.toString() === shop._id.toString()) ? 'selected' : '' %>>
+                                <%= shop.name %> (<%= shop.city ? shop.city.name : '?' %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label for="product-image">Resim URL (Opsiyonel / Kare):</label>
+                <input type="text" id="product-image" name="imageUrl" value="<%= product.imageUrl || '' %>" placeholder="https://...">
+            </div>
+            <div>
+                <label for="product-desc">Açıklama (Opsiyonel):</label>
+                <textarea id="product-desc" name="description"><%= product.description || '' %></textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label for="product-price-tl">Fiyat (TL):</label>
+                    <input type="number" step="0.01" id="product-price-tl" name="price_tl" value="<%= product.price_tl %>" required min="0">
+                </div>
+                <div class="stock-toggle-container">
+                    <span class="stock-toggle-label">Stokta Var:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="inStock" name="inStock" value="on" <%= product.inStock ? 'checked' : '' %>>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label for="product-cryptos">Geçerli Ödeme Yöntemleri:</label>
+                <div id="product-cryptos" style="max-height: 150px; overflow-y: auto; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; padding: 10px; display: grid; gap: 0;">
+                    <%
+                    const selectedCryptoIds = new Set(product.availableCryptos.map(c => c.toString()));
+                    %>
+                    <% if (typeof allCryptos !== 'undefined' && allCryptos.length > 0) { %>
+                        <% allCryptos.forEach(crypto => { %>
+                            <label class="custom-checkbox-container">
+                                <input type="checkbox" name="availableCryptos" value="<%= crypto._id %>" <%= selectedCryptoIds.has(crypto._id.toString()) ? 'checked' : '' %>>
+                                <span class="checkmark"></span>
+                                <span class="custom-checkbox-label">
+                                    <%= crypto.walletName %> (<%= crypto.symbol %>)
+                                </span>
+                            </label>
+                            <% }) %>
+                    <% } else { %>
+                        <span style="color: var(--text-muted); padding: 8px 5px;">Cüzdan listesi yüklenemedi.</span>
+                    <% } %>
+                </div>
+            </div>
+            <button type="submit" style="grid-column: 1 / -1;">Ürünü Güncelle</button>
+        </form>
+    </div>
+</body>
+</html>

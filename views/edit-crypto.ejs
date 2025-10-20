@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kripto Cüzdanı Düzenle</title>
+    <style>
+        :root { --bg-dark: #121212;
+            --bg-panel: #1e1e1e; --border-color: #333; --text-light: #e0e0e0; --text-muted: #aaa; --blue: #007bff; --input-bg: #333; --input-border: #555;
+            --link-blue: #4dabf5;}
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0; padding: 25px; background-color: var(--bg-dark); color: var(--text-light); }
+        .container { max-width: 800px;
+            margin: 30px auto; padding: 25px; background: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border-color);
+        }
+        h1 { border-bottom: 1px solid var(--border-color); padding-bottom: 15px;
+        }
+        .form-grid { display: grid; gap: 18px;
+        }
+        label { font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 6px; font-size: 0.9em;
+        }
+        input, select, textarea { padding: 12px; border-radius: 6px; border: 1px solid var(--input-border);
+            font-size: 1em; background: var(--input-bg); color: var(--text-light); width: 100%; box-sizing: border-box;
+        }
+        textarea { resize: vertical; min-height: 100px;
+        }
+        button { background-color: var(--blue); color: white; cursor: pointer; border: none;
+            padding: 12px 18px; border-radius: 6px; font-size: 1em; font-weight: 500; }
+        .back-link { color: var(--link-blue);
+            text-decoration: none; display: inline-block; margin-bottom: 20px;}
+
+        /* ****** MOBİL UYUMLULUK ****** */
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .container {
+                max-width: 95%;
+                padding: 15px;
+                margin-top: 15px;
+                margin-bottom: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+                padding-bottom: 10px;
+            }
+            input, select, textarea, button {
+                font-size: 0.95em;
+                padding: 10px;
+            }
+             .form-grid {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin/dashboard" class="back-link">&larr; Panele Geri Dön</a>
+        <h1>Kripto Cüzdanı Düzenle: <%= crypto.walletName %> (<%= crypto.symbol %>)</h1>
+
+        <form action="/admin/edit-crypto/<%= crypto._id %>" method="POST" class="form-grid">
+            <div>
+                <label for="crypto-walletName">Cüzdan Adı (Admin Görür):</label>
+                <input type="text" id="crypto-walletName" name="walletName" value="<%= crypto.walletName %>" required>
+             </div>
+            <div>
+                <label for="crypto-symbol">Sembol (Müşteri Görür, Max 5 Karakter):</label>
+                <input type="text" id="crypto-symbol" name="symbol" value="<%= crypto.symbol %>" required maxlength="5">
+            </div>
+            <div>
+                <label for="crypto-api-id">CoinGecko API ID:</label>
+                <input type="text" id="crypto-api-id" name="api_id" value="<%= crypto.api_id %>" required>
+            </div>
+            <div>
+                <label for="crypto-wallet">Cüzdan Adresi:</label>
+                <input type="text" id="crypto-wallet" name="walletAddress" value="<%= crypto.walletAddress %>" required>
+             </div>
+            <button type="submit">Cüzdanı Güncelle</button>
+        </form>
+    </div>
+</body>
+</html>

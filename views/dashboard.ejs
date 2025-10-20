@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #121212; --bg-panel: #1e1e1e; --border-color: #333; --text-light: #e0e0e0; --text-muted: #aaa; --blue: #007bff; --red: #d9534f; --green: #5cb85c; --input-bg: #333; --input-border: #555; --hover-bg: #2a2a2a; --link-blue: #4dabf5; --yellow-dark: #ffc107; --warning-bg: #4a3e2a; --warning-text: #ffebcc; --warning-border: #b8860b;
+        }
+        .status-Beklemede-admin { color: var(--yellow-dark); }
+        .status-Tamamlandı-admin { color: var(--green); }
+        .status-İptal-admin { color: var(--red); }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 25px; background-color: var(--bg-dark); color: var(--text-light); font-size: 15px; line-height: 1.6; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 1.8em; }
+        .logout-link { color: var(--red); text-decoration: none; font-weight: 500; padding: 8px 12px; border: 1px solid var(--red); border-radius: 5px; transition: background-color 0.2s, color 0.2s; }
+        .logout-link:hover { background-color: var(--red); color: white; }
+        .main-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: flex; flex-direction: column; min-width: 0; }
+        .panel h2 { border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin: 0 0 20px 0; font-size: 1.3em; font-weight: 600; }
+        .panel h3 { margin-top: 0; font-size: 1.15em; } /* h3 için margin-top eklendi */
+        .form-grid { display: grid; gap: 18px; }
+        label { font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 6px; font-size: 0.9em; }
+        input, select, textarea { padding: 12px; border-radius: 6px; border: 1px solid var(--input-border); font-size: 1em; background: var(--input-bg); color: var(--text-light); width: 100%; }
+        select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23aaa'%3E%3Cpath d='M8 11.5a.5.5 0 0 1-.354-.146l-4-4a.5.5 0 0 1 .708-.708L8 10.293l3.646-3.647a.5.5 0 0 1 .708.708l-4 4A.5.5 0 0 1 8 11.5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 16px 12px; padding-right: 2.5rem; }
+        textarea { resize: vertical; min-height: 80px; }
+        button { background-color: var(--blue); color: white; cursor: pointer; border: none; padding: 10px 18px; border-radius: 6px; font-size: 1em; font-weight: 500; transition: opacity 0.2s; }
+        button:hover { opacity: 0.85; }
+        button.delete-btn { background-color: var(--red); }
+        button.update-btn { background-color: var(--green); }
+        button.archive-btn { background-color: var(--blue); opacity: 0.8; font-size: 0.85em; padding: 5px 10px; }
+        button.archive-btn:hover { opacity: 1; }
+        hr { border: none; border-top: 1px solid var(--border-color); margin: 25px 0; }
+        .scrollable-list { max-height: 530px; overflow-y: auto; padding-right: 10px; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;}
+        .list-item { background: var(--hover-bg); padding: 12px 18px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: nowrap; }
+        .list-item .info { flex-grow: 1; overflow: hidden; }
+        .list-item .info strong, .list-item .info span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; word-break: break-all; }
+        .list-item span { color: var(--text-muted); font-size: 0.9em; }
+        .list-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+        .actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        .actions a { font-size: 0.9em; padding: 6px 12px; text-decoration: none; color: white; border-radius: 6px; border: none; cursor: pointer; background-color: var(--blue); display: inline-block; }
+        .actions a.edit-btn { }
+        .order-list { padding-right: 10px; margin-top: 0; }
+        .order-item { background: #2a2a2a; border: 1px solid #444; padding: 15px; margin-bottom: 12px; border-radius: 6px; position: relative; }
+        .order-item h3 { margin: 0 0 10px 0; color: var(--link-blue); font-size: 1.1em; }
+        .order-item p { margin: 5px 0; font-size: 0.95em; line-height: 1.5; word-break: break-word; overflow-wrap: break-word; }
+        .order-item code { background: #444; padding: 2px 5px; border-radius: 3px; word-break: break-all; color: var(--text-light); font-size: 0.9em; } /* Code stili eklendi */
+        .order-item span { font-size: 0.85em; color: #888; }
+        .message-container { position: fixed; top: 20px; right: 20px; z-index: 1000; width: 300px; max-width: 90%; }
+        .message { padding: 12px 18px; border-radius: 6px; margin-bottom: 15px; font-weight: 500; opacity: 1; transition: opacity 0.5s ease-out; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .message.fade-out { opacity: 0; }
+        .message.success { background: #198754; color: #fff; }
+        .message.error { background: #dc3545; color: #fff; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; }
+        .checkbox-group input[type="checkbox"] { width: auto; }
+        .order-messages { max-height: 200px; overflow-y: auto; background: #333; padding: 10px; border-radius: 5px; margin-top: 10px; }
+        .message-item { font-size: 0.9em; padding: 5px; border-bottom: 1px solid #444; word-break: break-word; overflow-wrap: break-word; }
+        .reply-form { display: flex; gap: 10px; margin-top: 10px; }
+        .reply-form input[type="text"] { flex-grow: 1; }
+        .accordion-container { margin-top: -20px; border-top: 1px solid var(--border-color); }
+        .accordion-btn { background-color: var(--input-bg); color: var(--text-light); cursor: pointer; padding: 15px 45px 15px 20px; width: 100%; border: none; border-bottom: 1px solid var(--border-color); text-align: left; font-size: 1.1em; font-weight: 600; transition: background-color 0.2s; outline: none; position: relative; margin-bottom: 5px; }
+        .accordion-btn::after { content: '▼'; font-size: 0.8em; color: var(--text-muted); position: absolute; right: 20px; top: 50%; transform: translateY(-50%); transition: transform 0.3s ease-out; }
+        .accordion-btn.active::after { transform: translateY(-50%) rotate(180deg); }
+        .accordion-btn:hover, .accordion-btn.active { background-color: #444; }
+        .accordion-panel { padding: 0; background-color: var(--bg-panel); max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; border-bottom: 1px solid var(--border-color); }
+        .accordion-panel .order-list { max-height: 450px; overflow-y: auto; padding: 20px; margin-top: 0; padding-right: 20px; }
+        .accordion-panel .order-list p { text-align: center; color:var(--text-muted); padding: 10px 0; }
+        .scrollable-list::-webkit-scrollbar, .accordion-panel .order-list::-webkit-scrollbar, .order-messages::-webkit-scrollbar, #product-cryptos::-webkit-scrollbar { width: 6px; }
+        .scrollable-list::-webkit-scrollbar-track, .accordion-panel .order-list::-webkit-scrollbar-track, .order-messages::-webkit-scrollbar-track, #product-cryptos::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 3px; }
+        .scrollable-list::-webkit-scrollbar-thumb, .accordion-panel .order-list::-webkit-scrollbar-thumb, .order-messages::-webkit-scrollbar-thumb, #product-cryptos::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .scrollable-list::-webkit-scrollbar-thumb:hover, .accordion-panel .order-list::-webkit-scrollbar-thumb:hover, .order-messages::-webkit-scrollbar-thumb:hover, #product-cryptos::-webkit-scrollbar-thumb:hover { background: #777; }
+        .custom-checkbox-container { display: block; position: relative; padding-left: 30px; margin-bottom: 0px; cursor: pointer; font-size: 1em; user-select: none; line-height: 20px; padding: 8px 5px 8px 30px; background: var(--bg-dark); border-radius: 4px; margin-bottom: 5px; }
+        .custom-checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        .checkmark { position: absolute; top: 8px; left: 5px; height: 20px; width: 20px; background-color: var(--input-bg); border: 1px solid var(--input-border); border-radius: 4px; transition: background-color 0.2s; }
+        .custom-checkbox-container:hover input ~ .checkmark { background-color: #555; }
+        .custom-checkbox-container input:checked ~ .checkmark { background-color: var(--blue); border-color: var(--blue); }
+        .checkmark:after { content: ""; position: absolute; display: none; }
+        .custom-checkbox-container input:checked ~ .checkmark:after { display: block; }
+        .custom-checkbox-container .checkmark:after { left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+        .custom-checkbox-label { color: var(--text-light); font-weight: normal; margin: 0 !important; display: inline !important; }
+        .stock-toggle-container { display: flex; align-items: center; align-self: end; padding-bottom: 0; }
+        .stock-toggle-label { margin: 0 10px 0 0 !important; color: var(--text-light) !important; font-size: 0.9em; font-weight: 500;}
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--green); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--green); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .archive-action-container { position: absolute; top: 15px; right: 15px; }
+        .archive-action-container form { display: inline-block; }
+        .order-item.has-unread { border-left: 4px solid var(--red); padding-left: 11px; }
+        .admin-note { font-size: 0.95em; color: var(--warning-text); background-color: var(--warning-bg); font-weight: bold; padding: 10px; border-radius: 6px; margin: -10px 0 25px 0; text-align: center; border: 1px solid var(--warning-border); }
+        .new-message-group-indicator { background-color: var(--red); color: white; font-weight: bold; font-size: 0.8em; margin-left: 10px; padding: 0; border-radius: 50%; vertical-align: middle; border: none; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; line-height: 20px; }
+
+        /* ****** MOBİL UYUMLULUK ****** */
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .header { padding: 10px 15px; margin-bottom: 20px; flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header h1 { font-size: 1.5em; }
+            .logout-link { padding: 6px 10px; font-size: 0.9em; }
+            .main-grid { gap: 20px; }
+            .panel { padding: 15px; }
+            .panel h2 { font-size: 1.2em; margin-bottom: 15px; padding-bottom: 10px; } /* Padding azaltıldı */
+            .panel h3 { font-size: 1.1em; }
+            input, select, textarea, button { font-size: 0.95em; padding: 10px; }
+            .form-grid > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr; } /* Ürün eklemede 2 sütunlu grid */
+             .form-grid > div[style*="display: flex; gap: 10px;"] { flex-direction: column; } /* Şehir ekleme input/butonu */
+             .form-grid > div[style*="display: flex; gap: 10px;"] > button { width: 100%; margin-top: 5px; } /* Şehir ekleme butonu */
+            .list-item { flex-wrap: wrap; padding: 10px; gap: 10px; /* Gap azaltıldı */ }
+            .list-item img { width: 50px; height: 50px; }
+            .list-item .info { flex-basis: calc(100% - 70px); /* Resim kadar yer bırak */ order: 0; margin-bottom: 0; } /* Resmin yanına sığdır */
+            .list-item .actions { flex-basis: 100%; justify-content: flex-end; margin-top: 10px; /* Info altına gelince boşluk */}
+            .actions a, .actions button { padding: 5px 10px; font-size: 0.85em; }
+            .order-item { padding: 12px; }
+            .order-item h3 { font-size: 1em; } /* Sipariş No küçültüldü */
+            .order-item p { font-size: 0.9em; } /* Sipariş detayı küçültüldü */
+            .reply-form input[type="text"] { padding: 8px; }
+            .reply-form button { padding: 8px 12px; font-size: 0.9em; } /* Yanıt gönder butonu */
+            .accordion-btn { padding: 12px 40px 12px 15px; font-size: 1em; }
+            .accordion-panel .order-list { padding: 15px; } /* Panel iç boşluğu */
+            .admin-note { font-size: 0.9em; padding: 8px; margin-bottom: 20px; }
+            .message-container { top: 10px; right: 10px; width: auto; left: 10px; }
+            .scrollable-list { max-height: 400px; } /* Liste yüksekliği mobilde azaltıldı */
+        }
+    </style>
+</head>
+<body>
+    <div class="header"><h1>Admin Paneli</h1><a href="/admin/logout" class="logout-link">Çıkış Yap</a></div>
+
+    <div class="message-container">
+        <% if (locals.successMsg && locals.successMsg.length > 0) { %><div class="message success" id="flash-message"><%= successMsg %></div><% } %>
+        <% if (locals.errorMsg && locals.errorMsg.length > 0) { %><div class="message error" id="flash-message"><%= errorMsg %></div><% } %>
+    </div>
+
+    <div class="main-grid">
+        <div class="panel">
+            <h2>Dükkan ve Şehir Yönetimi</h2>
+            <form action="/admin/add-shop" method="POST" class="form-grid">
+                 <label for="shop-name">Dükkan Adı:</label><input type="text" id="shop-name" name="name" required>
+                 <label for="shop-desc">Dükkan Açıklaması (Opsiyonel):</label><textarea id="shop-desc" name="description"></textarea>
+                 <label for="shop-city-select">Şehir:</label>
+                 <div style="display: flex; gap: 10px;">
+                    <select id="shop-city-select" name="city" required style="flex-grow: 1;">
+                        <option value="">-- Şehir Seçin --</option>
+                        <% cities.forEach(city => { %><option value="<%= city._id %>"><%= city.name %></option><% }) %>
+                     </select>
+                    <input type="text" id="new-city-name" placeholder="Veya Yeni Şehir Ekle..." style="flex-grow: 1;" title="Yeni şehir adı">
+                    <button type="button" onclick="addNewCity()" style="padding: 10px;" title="Şehri Ekle">+</button>
+                 </div>
+                 <label for="shop-image">Mağaza Resim URL (Opsiyonel / Kare):</label><input type="text" id="shop-image" name="imageUrl" placeholder="https://...">
+                 <button type="submit">Dükkan Ekle</button>
+            </form>
+            <hr>
+            <h3>Mevcut Dükkanlar</h3>
+            <div class="scrollable-list">
+                 <ul><% shops.forEach(shop => { %> <% if (shop.city) { %> <li class="list-item"> <% if (shop.imageUrl) { %><img src="<%= shop.imageUrl %>" alt="<%= shop.name %>"><% } %> <div class="info"><strong><%= shop.name %></strong><span><%= shop.city.name %></span></div>
+                    <div class="actions"> <a href="/admin/edit-shop/<%= shop._id %>">Düzenle</a> <form action="/admin/delete-shop/<%= shop._id %>" method="POST" onsubmit="return confirm('Bu dükkanı silmek istediğinizden emin misiniz?\nDükkana bağlı ürün varsa silinmeyecektir.');"><button type="submit" class="delete-btn">Sil</button></form> </div> </li> <% } %> <% }) %></ul>
+            </div>
+            <hr>
+            <h3>Şehirler</h3>
+            <div class="scrollable-list">
+                <ul><% cities.forEach(city => { %> <li class="list-item"> <span class="info"><%= city.name %></span> <form action="/admin/delete-city/<%= city._id %>" method="POST" class="actions" onsubmit="return confirm('Bu şehri silmek istediğinizden emin misiniz? Şehre bağlı dükkan varsa silinmeyecektir.');"><button type="submit" class="delete-btn">Sil</button></form> </li> <% }) %></ul>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Ürün Yönetimi</h2>
+            <form action="/admin/add-product" method="POST" class="form-grid">
+                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                     <div><label for="product-name">Ürün Adı:</label><input type="text" id="product-name" name="name" required></div>
+                     <div><label for="product-shop-select">Dükkan:</label><select id="product-shop-select" name="shopId" required><option value="">Seçin...</option><% shops.forEach(shop => { %><option value="<%= shop._id %>"><%= shop.name %> (<%= shop.city ? shop.city.name : '?' %>)</option><% }) %></select></div>
+                 </div>
+                 <div><label for="product-image">Resim URL (Opsiyonel / Kare):</label><input type="text" id="product-image" name="imageUrl" placeholder="https://..."></div>
+                 <div><label for="product-desc">Açıklama (Opsiyonel):</label><textarea id="product-desc" name="description"></textarea></div>
+                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                     <div><label for="product-price-tl">Fiyat (TL):</label><input type="number" step="0.01" id="product-price-tl" name="price_tl" required min="0" placeholder="1500.50"></div>
+                     <div class="stock-toggle-container">
+                        <span class="stock-toggle-label">Stokta Var:</span>
+                        <label class="switch"> <input type="checkbox" id="inStock" name="inStock" value="on" checked> <span class="slider"></span> </label>
+                     </div>
+                 </div>
+                 <div>
+                    <label>Geçerli Ödeme Yöntemleri:</label>
+                    <div id="product-cryptos" style="max-height: 150px; overflow-y: auto; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; padding: 10px; display: grid; gap: 0;">
+                        <% if (cryptos.length > 0) { %>
+                            <% cryptos.forEach(crypto => { %>
+                                <label class="custom-checkbox-container"> <input type="checkbox" name="availableCryptos" value="<%= crypto._id %>"> <span class="checkmark"></span> <span class="custom-checkbox-label"><%= crypto.walletName %> (<%= crypto.symbol %>)</span> </label>
+                            <% }) %>
+                        <% } else { %> <span style="color: var(--text-muted); padding: 8px 5px;">Cüzdan eklenmemiş.</span> <% } %>
+                    </div>
+                 </div>
+                 <button type="submit">Ürün Ekle</button>
+            </form>
+            <hr>
+            <h3>Mevcut Ürünler</h3>
+            <div class="scrollable-list">
+                 <ul><% products.forEach(product => { %> <% if (product.shop) { %> <li class="list-item"> <% if (product.imageUrl) { %><img src="<%= product.imageUrl %>" alt="<%= product.name %>"><% } %> <div class="info"><strong><%= product.name %></strong><span><%= product.shop.name %> | <%= product.price_tl %> TL | <span style="color: <%= product.inStock ? 'var(--green)' : 'var(--red)' %>; font-weight: 500;"><%= product.inStock ? "Stokta Var" : "Stokta Yok" %></span></span></div>
+                    <div class="actions"> <a href="/admin/edit-product/<%= product._id %>">Düzenle</a> <form action="/admin/delete-product/<%= product._id %>" method="POST" onsubmit="return confirm('Bu ürünü silmek istediğinizden emin misiniz?');"><button type="submit" class="delete-btn">Sil</button></form> </div> </li> <% } %> <% }) %></ul>
+            </div>
+        </div>
+
+      <div class="panel">
+            <h2>Kripto Cüzdan Yönetimi</h2>
+             <form action="/admin/add-crypto" method="POST" class="form-grid">
+                <label for="crypto-walletName">Cüzdan Adı (Admin Görür):</label><input type="text" id="crypto-walletName" name="walletName" required placeholder="Ana ETH Cüzdanım">
+                 <label for="crypto-symbol">Sembol (Müşteri Görür):</label><input type="text" id="crypto-symbol" name="symbol" required maxlength="5" placeholder="ETH">
+                 <label for="crypto-api-id">CoinGecko API ID:</label><input type="text" id="crypto-api-id" name="api_id" required placeholder="ethereum">
+                 <label for="crypto-wallet">Cüzdan Adresi:</label><input type="text" id="crypto-wallet" name="walletAddress" required placeholder="0x...">
+                <button type="submit">Kripto Cüzdanı Ekle</button>
+            </form>
+             <hr>
+             <h3>Mevcut Cüzdanlar</h3>
+             <div class="scrollable-list">
+                 <ul><% cryptos.forEach(crypto => { %> <li class="list-item"> <div class="info"><strong><%= crypto.walletName %> (<%= crypto.symbol %>)</strong><span><%= crypto.walletAddress %></span></div>
+                    <div class="actions"> <a href="/admin/edit-crypto/<%= crypto._id %>">Düzenle</a> <form action="/admin/delete-crypto/<%= crypto._id %>" method="POST" onsubmit="return confirm('Bu cüzdanı silmek istediğinizden emin misiniz?\nÜrünler bu cüzdanı kullanıyorsa hata alabilirsiniz.');"><button type="submit" class="delete-btn actions">Sil</button></form> </div> </li> <% }) %></ul>
+            </div>
+        </div>
+
+       <div class="panel">
+            <h2>Gelen Siparişler</h2>
+            <p class="admin-note"> Yeni siparişleri ve mesajları görmek için sayfayı sıkça yenilemeyi unutmayın. </p>
+            <%
+                const activeOrders = orders.filter(o => !o.isArchived);
+                const pendingOrders = activeOrders.filter(o => o.status === 'Beklemede');
+                const completedOrders = activeOrders.filter(o => o.status === 'Tamamlandı');
+                const cancelledOrders = activeOrders.filter(o => o.status === 'İptal');
+                const archivedOrders = orders.filter(o => o.isArchived);
+                const unreadPendingCount = pendingOrders.filter(o => o.hasUnreadUserMessage).length;
+                const unreadCompletedCount = completedOrders.filter(o => o.hasUnreadUserMessage).length;
+                const unreadCancelledCount = cancelledOrders.filter(o => o.hasUnreadUserMessage).length;
+                const unreadArchivedCount = archivedOrders.filter(o => o.hasUnreadUserMessage).length;
+            %>
+            <div class="accordion-container" id="order-accordion">
+                <button class="accordion-btn"> Beklemede (<%= pendingOrders.length %>) <% if (unreadPendingCount > 0) { %><span class="new-message-group-indicator"><%= unreadPendingCount %></span><% } %> </button>
+                <div class="accordion-panel"> <div class="order-list"> <% if (pendingOrders.length === 0) { %><p>Bekleyen sipariş yok.</p><% } %> <% pendingOrders.forEach(order => { %> <%- include('partials/order-item', {order: order, isArchived: false}) %> <% }) %> </div> </div>
+                <button class="accordion-btn"> Ödeme Onaylandı (<%= completedOrders.length %>) <% if (unreadCompletedCount > 0) { %><span class="new-message-group-indicator"><%= unreadCompletedCount %></span><% } %> </button>
+                 <div class="accordion-panel"> <div class="order-list"> <% if (completedOrders.length === 0) { %><p>Onaylanmış sipariş yok.</p><% } %> <% completedOrders.forEach(order => { %> <%- include('partials/order-item', {order: order, isArchived: false}) %> <% }) %> </div> </div>
+                <button class="accordion-btn"> İptal Edildi (<%= cancelledOrders.length %>) <% if (unreadCancelledCount > 0) { %><span class="new-message-group-indicator"><%= unreadCancelledCount %></span><% } %> </button>
+                <div class="accordion-panel"> <div class="order-list"> <% if (cancelledOrders.length === 0) { %><p>İptal edilmiş sipariş yok.</p><% } %> <% cancelledOrders.forEach(order => { %> <%- include('partials/order-item', {order: order, isArchived: false}) %> <% }) %> </div> </div>
+                <button class="accordion-btn"> Arşiv (<%= archivedOrders.length %>) <% if (unreadArchivedCount > 0) { %><span class="new-message-group-indicator"><%= unreadArchivedCount %></span><% } %> </button>
+                 <div class="accordion-panel"> <div class="order-list"> <% if (archivedOrders.length === 0) { %><p>Arşivlenmiş sipariş yok.</p><% } %> <% archivedOrders.forEach(order => { %> <%- include('partials/order-item', {order: order, isArchived: true}) %> <% }) %> </div> </div>
+            </div>
+       </div>
+    </div>
+    <script>
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) { flashMessage.style.transition = 'opacity 0.5s ease-out 3s'; setTimeout(() => { flashMessage.style.opacity = '0'; }, 100); setTimeout(() => { flashMessage.remove(); }, 3600); }
+        async function addNewCity() { const n = document.getElementById('new-city-name'),t=n.value.trim();if(!t)return;const e=document.createElement('form');e.method='POST';e.action='/admin/add-city';const i=document.createElement('input');i.type='hidden';i.name='name';i.value=t;e.appendChild(i);document.body.appendChild(e);e.submit() }
+        document.addEventListener('DOMContentLoaded', () => { const t = document.getElementById('order-accordion'); if (t) { const n = t.querySelectorAll('.accordion-btn'), e = t => { const n = t.querySelector('.order-list'); return n ? (totalHeight = n.scrollHeight + 40) > 490 ? '490px' : totalHeight + 'px' : '50px' }; n.forEach(t => { t.addEventListener('click', function() { n.forEach(t => { t !== this && (t.classList.remove('active'), t.nextElementSibling.style.maxHeight = null) }); this.classList.toggle('active'); const t = this.nextElementSibling; t.style.maxHeight ? t.style.maxHeight = null : t.style.maxHeight = e(t) }) }); const i = t.querySelector('.new-message-group-indicator'); if (i) { const t = i.closest('.accordion-btn'), n = t.nextElementSibling; t.classList.add('active'); n.style.maxHeight = e(n) } else { const i = Array.from(n).find(t => t.nextElementSibling.querySelector('.order-item')); if (i) { const t = i.nextElementSibling; i.classList.add('active'); t.style.maxHeight = e(t) } } } });
+    </script>
+</body>
+</html>

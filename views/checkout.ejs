@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satın Alma</title>
+    <script src="/js/qrcode.min.js"></script>
+    <style>
+        :root { --bg-dark: #121212;
+            --bg-panel: #1e1e1e; --border-color: #333; --text-light: #e0e0e0; --text-muted: #aaa; --blue: #007bff; --link-blue: #4dabf5; --red: #e57373; --green: #28a745; --input-bg: #333; --input-border: #555;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        margin: 0; padding: 0; background: var(--bg-dark); color: var(--text-light); }
+        header { background: var(--bg-panel);
+        padding: 15px 30px; border-bottom: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; color: #ffffff;
+        }
+        header h1 { margin: 0; font-size: 1.5em;
+        }
+        .timer { font-size: 1.1em; font-weight: 500; color: var(--red);
+        }
+        .container { max-width: 800px; margin: 30px auto; padding: 25px; background: var(--bg-panel);
+        border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+        }
+        .product-checkout { display: flex; gap: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;
+        flex-wrap: wrap; align-items: flex-start;}
+        .product-image-container { width: 120px; height: 120px; background: #333;
+        display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #444; flex-shrink: 0; aspect-ratio: 1 / 1;
+        }
+        .product-checkout img { display: block; width: 100%; height: 100%; object-fit: cover;
+        border-radius: 8px; }
+        .product-details { flex-grow: 1; min-width: 0;
+        }
+        .product-details h2, .product-details .price, .product-details .stock p { word-wrap: break-word;
+        overflow-wrap: break-word; word-break: break-word; }
+        .product-details h2 { margin: 0 0 10px 0;
+        color: #ffffff; }
+        .product-details .price { font-size: 1.1em; font-weight: 500; color: var(--link-blue);
+        }
+        .product-details .stock { font-size: 0.9em; color: var(--text-muted); margin-top: 5px;
+        }
+        .purchase-form { margin-top: 25px; display: grid; gap: 18px;
+        }
+        .form-group { display: grid; gap: 6px;
+        }
+        .form-group label { font-weight: 500; color: #ccc;
+        }
+        .form-group input, .form-group textarea, .form-group select { padding: 12px; border-radius: 6px;
+        border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-light); font-size: 1em; width: 100%; box-sizing: border-box;
+        }
+        .form-group input[type="number"] { width: 100px;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical;
+        }
+        .total-price { text-align: right; font-size: 1.6em; font-weight: bold; color: #ffffff; margin-top: 25px;
+        border-top: 1px solid var(--border-color); padding-top: 20px; min-height: 1.2em; word-wrap: break-word; overflow-wrap: break-word;
+        }
+        .payment-section { margin-top: 30px; padding: 25px; background: #2a2a2a; border-radius: 8px;
+        }
+        .payment-section h2 { margin-top: 0; color: #ffffff;
+        }
+        .wallet-info { display: grid; grid-template-columns: auto 1fr; gap: 15px 20px; align-items: center;
+        margin-top: 15px; }
+        #qrcode { width: 128px !important; height: 128px !important; background: white;
+        padding: 8px; border-radius: 6px; grid-row: span 2; display: flex; align-items: center; justify-content: center;
+        }
+        #qrcode img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        .wallet-address-container { display: flex;
+        align-items: center; gap: 10px; }
+        .wallet-address { font-family: monospace; background: var(--bg-dark);
+        padding: 12px 15px; border-radius: 5px; word-break: break-all; border: 1px solid var(--border-color); font-size: 1.05em; flex-grow: 1; color: #f5f5f5; opacity: 1;
+        }
+        .copy-btn { padding: 8px 12px; background: var(--input-border); color: var(--text-light); border: none;
+        border-radius: 5px; cursor: pointer; font-weight: 500; }
+        #confirm-payment-btn { background: var(--green); color: white;
+        padding: 15px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; width: 100%; margin-top: 25px; font-weight: 500;
+        }
+        #confirm-payment-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.7;
+        }
+        .stock-error { color: var(--red); font-weight: 500; font-size: 0.9em;
+        }
+        .back-link { color: var(--link-blue); text-decoration: none; display: inline-block;
+        margin-bottom: 20px;}
+        .loading-text { color: var(--text-muted); font-style: italic;
+        }
+        .confirmation-message { text-align: center; padding: 30px;
+        }
+        .confirmation-message h2 { color: var(--green);
+        margin-bottom: 15px;}
+        .confirmation-message p { margin: 10px 0;
+        line-height: 1.6;}
+        .confirmation-message strong { color: var(--link-blue);
+        }
+        .error-message { color: var(--red); margin-top: 15px; text-align: center; font-weight: 500;
+        }
+        .out-of-stock-message { color: var(--red); font-weight: bold; text-align: center; margin-top: 20px; font-size: 1.1em;
+        }
+        .order-number-display {
+            display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 10px 0;
+        }
+        .order-number-display p { margin: 0; white-space: nowrap; }
+        .order-number-display span#order-number { background: var(--input-bg); padding: 3px 8px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; display: inline-block; vertical-align: middle; }
+
+        @media (max-width: 768px) {
+            body { padding: 0; }
+            header { padding: 10px 15px; }
+            header h1 { font-size: 1.2em; }
+            .timer { font-size: 0.9em; }
+            .container { max-width: 100%; padding: 15px; margin: 15px 0 0 0; border-radius: 0; border-left: none; border-right: none; }
+            #confirmation-container.container { border-radius: 0; border: none; margin: 0; }
+            .product-checkout { gap: 15px; padding-bottom: 15px; }
+            .product-image-container { width: 80px; height: 80px; }
+            .product-details h2 { font-size: 1.2em; }
+            .wallet-info { grid-template-columns: 1fr; gap: 10px; justify-items: center; }
+            #qrcode { grid-row: auto; width: 110px !important; height: 110px !important; padding: 5px; }
+            .wallet-address-container { width: 100%; }
+            .payment-section { padding: 15px; }
+            .payment-section p, .total-price, .form-group input, .form-group select, .form-group textarea { font-size: 1em; }
+            .total-price { font-size: 1.4em; margin-top: 15px; padding-top: 15px; }
+            #confirm-payment-btn { padding: 12px; font-size: 1em; }
+            .confirmation-message h2 { font-size: 1.4em; }
+            .confirmation-message p { font-size: 0.95em; }
+            #copy-order-btn { padding: 6px 12px; }
+            .order-number-display { flex-direction: column; align-items: center; gap: 8px; }
+            .order-number-display p { white-space: normal; text-align: center; }
+            .order-number-display span#order-number { max-width: 90%; }
+        }
+    </style>
+</head>
+<body>
+    <header><h1>Satın Alma</h1><div class="timer" id="countdown">...</div></header>
+
+    <div class="container" id="main-container">
+        <% if (locals.checkoutError) { %>
+            <div class="error-message" style="display: block; margin-bottom: 20px;"><%= checkoutError %> <br><a href="/shop?token=<%= locals.token || '' %>" class="back-link">Mağazaya Dön</a></div>
+        <% } %>
+
+        <% if (typeof product !== 'undefined' && product && !locals.checkoutError) { %>
+            <a href="/shop?token=<%= token %>" class="back-link">&larr; Dükkana Geri Dön</a>
+            <div class="product-checkout">
+                 <div class="product-image-container"><% if (product.imageUrl) { %><img src="<%= product.imageUrl %>" alt="<%= product.name %>"><% } %></div>
+                <div class="product-details">
+                    <h2><%= product.name || '?' %></h2>
+                    <div class="price" id="base-price" class="loading-text">Birim Fiyat: -</div>
+                    <div class="stock" id="max-stock" data-stock="<%= product.stock > 0 ? product.stock : (product.inStock ? 99 : 0) %>"> <%= product.inStock ? "Stokta Var" : "Stok Tükendi" %>
+                        <% if (product.description) { %><p style="font-size:0.9em;color:var(--text-muted);margin-top:8px"><%= product.description %></p><% } %>
+                    </div>
+                </div>
+            </div>
+
+            <% if (product.inStock) { %>
+                <div class="purchase-form">
+                    <div class="form-group"><label for="quantity">Miktar:</label><input type="number" id="quantity" value="1" min="1" max="99" oninput="updateTotal()"><span id="stock-error" class="stock-error" style="display:none"></span></div>
+                    <div class="form-group">
+                    <label for="crypto-select">Ödeme Yöntemi:</label>
+                         <select id="crypto-select" onchange="updateTotal()">
+                            <option value="">-- Kripto Seçin --</option>
+                            <% if (product.availableCryptos && product.availableCryptos.length > 0) { %>
+                                 <% product.availableCryptos.forEach(crypto => { %>
+                                    <option value="<%= crypto._id %>"
+                                            data-wallet-address="<%= crypto.walletAddress %>"
+                                            data-symbol="<%= crypto.symbol %>"
+                                            data-api-id="<%= crypto.api_id %>">
+                                        <%= crypto.walletName %> (<%= crypto.symbol %>)
+                                    </option>
+                                 <% }); %>
+                            <% } else { %>
+                                <option value="" disabled>Bu ürün için ödeme yöntemi yok.</option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="seller-note">Not (Opsiyonel):</label>
+                        <textarea id="seller-note" placeholder="Satıcıya not bırakabilirsiniz..."></textarea>
+                    </div>
+                </div>
+                 <div class="total-price" id="total-price" class="loading-text">Lütfen ödeme yöntemi seçin.</div>
+
+                <div class="payment-section" id="payment-section" style="display:none">
+                    <h2>Ödeme</h2>
+                    <p>Lütfen <strong id="payment-amount">...</strong> tutarını şu adrese gönderin:</p>
+                     <div class="wallet-info">
+                        <div id="qrcode"></div>
+                        <div style="display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+                             <div class="wallet-address-container">
+                                <input type="text" class="wallet-address" id="wallet-address" readonly>
+                                <button class="copy-btn" id="copy-btn" onclick="copyAddress()">Kopyala</button>
+                             </div>
+                             <span style="font-size:.85em;color:var(--text-muted)">Adresi kopyalayabilir veya QR kodu taratabilirsiniz.</span>
+                        </div>
+                     </div>
+                </div>
+
+                <div class="form-group" id="txid-group" style="display:none; margin-top: 20px;">
+                    <label for="transactionId">Transaction ID (TxID / Hash):</label>
+                    <input type="text"
+                           id="transactionId"
+                           placeholder="Ödemeyi gönderdikten sonra aldığınız işlem kimliğini buraya yapıştırın..."
+                           required
+                           pattern="^(0x[a-fA-F0-9]{64}|[a-fA-F0-9]{64})$"
+                           title="Lütfen geçerli bir Transaction ID (İşlem Kimliği) girin.">
+                    <small style="font-size: 0.8em; color: var(--text-muted);">Bu kimlik olmadan onay yapılamaz.</small>
+                </div>
+
+                <div id="error-message" class="error-message" style="display:none"></div>
+                <button id="confirm-payment-btn" onclick="confirmPayment()" disabled>Önce Ödeme Yöntemi Seçin</button>
+
+            <% } else { %>
+                <div class="out-of-stock-message"> Stok Tükendi </div>
+             <% } %>
+        <% } else if (!locals.checkoutError) { %>
+             <div class="error-message" style="display: block;">Ürün yüklenemedi. Geçerli bir ürün ID'si ile geldiğinizden emin olun veya <a href="/shop?token=<%= locals.token || '' %>" class="back-link">Mağazaya Dönün</a>.</div>
+        <% } %>
+    </div>
+
+    <div class="container" id="confirmation-container" style="display:none">
+        <div class="confirmation-message">
+            <h2>✓ Ödeme Onaylandı!</h2>
+            <p>Siparişiniz sisteme kaydedildi.</p>
+            <div class="order-number-display">
+                <p><strong>Sipariş Numaranız: <span id="order-number"></span></strong></p>
+                <button onclick="copyOrderNumber()" id="copy-order-btn" style="padding: 5px 10px; font-size: 0.8em; background: var(--input-border); color: var(--text-light); border: none; border-radius: 5px; cursor: pointer;">Kopyala</button>
+            </div>
+            <p style="margin-top: 20px; color: var(--text-muted); font-size: 0.9em;">
+                Lütfen olası sorularınız veya destek talepleriniz için bu numarayı saklayınız.<br>
+                Satıcı ile iletişime geçmek için dükkan sayfasındaki "Destek" butonunu kullanarak bu sipariş numarası ile mesaj gönderebilirsiniz.
+            </p>
+            <a href="/shop?token=<%= locals.token || '' %>" class="back-link" style="margin-top: 25px;">&larr; Mağazaya Geri Dön</a>
+        </div>
+    </div>
+
+    <script>
+        const EXPIRATION_TIMESTAMP = <%= locals.expirationTime || 0 %>;
+        const TOKEN = "<%= locals.token || '' %>";
+        const PRODUCT_ID = "<%= (typeof product !== 'undefined' && product) ? product._id : '' %>";
+        const PRODUCT_PRICE_TL = <%= (typeof product !== 'undefined' && product) ? product.price_tl : 0 %>;
+        let liveRates = {};
+    </script>
+
+    <script>
+        console.log("Checkout ana script bloğu başladı.");
+
+        function startTimer(t,d){if(!d||!t)return console.error("Timer başlatılamadı: Eksik parametre.");const i=setInterval(()=>{const n=Math.floor(Date.now()/1e3);let r=t-n;if(r<=0){clearInterval(i);d.textContent="Süre Doldu";window.location.href="/"}else{let m=parseInt(r/60,10),s=parseInt(r%60,10);m=m<10?"0"+m:m;s=s<10?"0"+s:s;d.textContent="Kalan Süre: "+m+":"+s}},1e3)}
+
+        let quantityInput, cryptoSelect, totalEl, errorEl, confirmBtn, paymentSection, walletAddressEl, basePriceEl, paymentAmountEl, qrcodeEl, errorMessageEl, txidGroup, currentQRCode = null, maxStock = 0, mainContainer, confirmationContainer, orderNumberSpan;
+
+        function updateTotal() {
+            if (!quantityInput || !cryptoSelect || !totalEl || !paymentSection || !basePriceEl || !paymentAmountEl || !walletAddressEl || !qrcodeEl || !confirmBtn || !txidGroup) { console.error("updateTotal: Gerekli elementlerden biri bulunamadı!"); return; }
+            if(errorMessageEl) errorMessageEl.style.display = 'none';
+            let quantity = parseInt(quantityInput.value);
+            const selectedOption = cryptoSelect.options[cryptoSelect.selectedIndex];
+            const selectedValue = selectedOption ? selectedOption.value : null;
+            const walletAddress = selectedOption ? selectedOption.dataset.walletAddress : null;
+            const apiSymbol = selectedOption ? selectedOption.dataset.symbol : null;
+            if (!selectedValue || !walletAddress || typeof liveRates !== 'object' || !liveRates[apiSymbol]) {
+                totalEl.innerText = "Lütfen geçerli ödeme yöntemi seçin."; totalEl.classList.add('loading-text');
+                basePriceEl.innerText = "Birim Fiyat: -"; paymentSection.style.display = 'none'; txidGroup.style.display = 'none';
+                confirmBtn.disabled = true; confirmBtn.innerText = 'Önce Ödeme Yöntemi Seçin'; return;
+            }
+            const rate = liveRates[apiSymbol]; const basePrice = PRODUCT_PRICE_TL / rate;
+            if (typeof basePrice !== 'number' || isNaN(basePrice)) { basePriceEl.innerText = `Birim Fiyat: Hata (${apiSymbol})`; paymentSection.style.display = 'none'; txidGroup.style.display = 'none'; confirmBtn.disabled = true; return; }
+            basePriceEl.innerText = `Birim Fiyat: ${basePrice.toFixed(6)} ${apiSymbol}`;
+            if (isNaN(quantity) || quantity < 1) { quantity = 1; quantityInput.value = 1; }
+            // Stok kontrolü
+             if (quantity > maxStock) {
+                 quantity = maxStock; quantityInput.value = maxStock;
+                 if (errorEl) { errorEl.innerText = `Maksimum stok miktarı ${maxStock}.`; errorEl.style.display = 'block'; }
+            } else { if (errorEl) errorEl.style.display = 'none'; }
+            const total = basePrice * quantity;
+            if (isNaN(total)) { totalEl.innerText = `Toplam: Hata`; paymentSection.style.display = 'none'; txidGroup.style.display = 'none'; confirmBtn.disabled = true; return; }
+            const totalString = `${total.toFixed(6)} ${apiSymbol}`;
+            totalEl.innerText = `Toplam: ${totalString}`; totalEl.classList.remove('loading-text');
+            paymentAmountEl.innerText = totalString; walletAddressEl.value = walletAddress; paymentSection.style.display = 'block'; txidGroup.style.display = 'grid';
+            confirmBtn.disabled = false; confirmBtn.innerText = 'Ödemeyi Onaylıyorum'; qrcodeEl.innerHTML = '';
+            if (currentQRCode) { currentQRCode.clear(); currentQRCode = null; }
+            if (typeof QRCode !== 'undefined' && walletAddress) { try { currentQRCode = new QRCode(qrcodeEl, { text: walletAddress, width: 128, height: 128, colorDark : "#e0e0e0", colorLight : "#2a2a2a", correctLevel : QRCode.CorrectLevel.H }); } catch (e) { console.error("QR Kod oluşturma hatası:", e); qrcodeEl.innerHTML = 'QR Kod Hatası'; } }
+        }
+        function copyAddress() {
+             if (walletAddressEl) { walletAddressEl.select(); walletAddressEl.setSelectionRange(0, 99999); try { navigator.clipboard.writeText(walletAddressEl.value).then(() => { const copyBtn = document.getElementById('copy-btn'); if(copyBtn) { copyBtn.innerText = 'Kopyalandı!'; setTimeout(() => { copyBtn.innerText = 'Kopyala'; }, 2000); } }).catch(err => { if (document.execCommand('copy')) { const copyBtn = document.getElementById('copy-btn'); if(copyBtn) { copyBtn.innerText = 'Kopyalandı!'; setTimeout(() => { copyBtn.innerText = 'Kopyala'; }, 2000); } } else { throw new Error('execCommand desteklenmiyor.'); } }); } catch(err) { console.error("Kopyalama başarısız:", err); alert('Adres otomatik kopyalanamadı.'); } }
+         }
+        async function fetchInitialPrices() {
+             try { const response = await fetch(`/api/prices?token=${TOKEN}`); if (!response.ok) throw new Error(`Kurlar alınamadı (${response.status})`); liveRates = await response.json(); updateTotal(); } catch (err) { console.error("Anlık kur çekme hatası:", err); if(totalEl) totalEl.innerText = "Fiyat kurları alınamadı."; if(basePriceEl) basePriceEl.innerText = "Birim Fiyat: Hata"; if(cryptoSelect) cryptoSelect.disabled = true; }
+         }
+        async function confirmPayment() {
+             confirmBtn = document.getElementById('confirm-payment-btn'); quantityInput = document.getElementById('quantity'); cryptoSelect = document.getElementById('crypto-select'); errorMessageEl = document.getElementById('error-message'); mainContainer = document.getElementById('main-container'); confirmationContainer = document.getElementById('confirmation-container'); orderNumberSpan = document.getElementById('order-number'); totalEl = document.getElementById('total-price'); paymentAmountEl = document.getElementById('payment-amount'); const txIdInput = document.getElementById('transactionId');
+             if(!confirmBtn||!quantityInput||!cryptoSelect||!errorMessageEl||!mainContainer||!confirmationContainer||!orderNumberSpan||!totalEl||!paymentAmountEl || !txIdInput){ alert("Sayfada bir hata oluştu (element eksik). Lütfen yenileyin."); return; }
+             const q=parseInt(quantityInput.value); const nE=document.getElementById('seller-note'); const n=nE?nE.value:''; const sC=cryptoSelect.value; const pI=paymentAmountEl.innerText; const txId = txIdInput.value.trim(); const txIdPattern = /^(0x[a-fA-F0-9]{64}|[a-fA-F0-9]{64})$/;
+             if(!sC || sC === ""){ errorMessageEl.innerText="Ödeme yöntemi seçin."; errorMessageEl.style.display='block'; return; }
+             if (!txId) { errorMessageEl.innerText = "Lütfen Transaction ID girin."; errorMessageEl.style.display = 'block'; return; }
+             if (!txIdPattern.test(txId)) { errorMessageEl.innerText = "Geçersiz Transaction ID formatı. Lütfen kontrol edin."; errorMessageEl.style.display = 'block'; return; }
+             if (!PRODUCT_ID) { errorMessageEl.innerText="Ürün bilgisi alınamadı. Sayfayı yenileyin."; errorMessageEl.style.display='block'; return; }
+             confirmBtn.disabled=true; confirmBtn.innerText="İşleniyor..."; errorMessageEl.style.display='none'; const dataToSend = { productId: PRODUCT_ID, quantity: q, note: n, paymentInfo: pI, selectedCryptoId: sC, transactionId: txId };
+             try{ const r=await fetch(`/checkout?token=${TOKEN}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dataToSend)}); const d=await r.json();
+                if(r.ok && d.success && d.orderNumber){
+                    console.log("confirmPayment: Sipariş başarıyla oluşturuldu.");
+                    // ****** LİNK GÜNCELLEME KODU BURADA ******
+                    const confirmationLink = document.querySelector('#confirmation-container .back-link');
+                    if (confirmationLink && TOKEN) { confirmationLink.href = `/shop?token=${TOKEN}`; console.log("Onay linki güncellendi:", confirmationLink.href); }
+                    else { console.error("Onay linki veya TOKEN bulunamadı!"); }
+                    // ****** /LİNK GÜNCELLEME KODU ******
+                    if(mainContainer)mainContainer.style.display='none'; if(orderNumberSpan)orderNumberSpan.innerText=d.orderNumber; if(confirmationContainer)confirmationContainer.style.display='block';
+                 } else{ throw new Error(d.message || `Sunucu Hatası (${r.status})`); }
+            } catch(err){ errorMessageEl.innerText=`Sipariş oluşturulamadı: ${err.message}`; errorMessageEl.style.display='block'; confirmBtn.disabled=false; confirmBtn.innerText="Ödemeyi Onaylıyorum"; }
+         }
+        function copyOrderNumber() {
+            const orderNumberSpan = document.getElementById('order-number'); const copyBtn = document.getElementById('copy-order-btn'); if (!orderNumberSpan || !copyBtn) return; const orderNumber = orderNumberSpan.innerText; if (!orderNumber) return; navigator.clipboard.writeText(orderNumber).then(() => { copyBtn.innerText = 'Kopyalandı!'; setTimeout(() => { copyBtn.innerText = 'Kopyala'; }, 2000); }).catch(err => { try { const tempInput = document.createElement('input'); document.body.appendChild(tempInput); tempInput.value = orderNumber; tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput); copyBtn.innerText = 'Kopyalandı!'; setTimeout(() => { copyBtn.innerText = 'Kopyala'; }, 2000); } catch (copyErr) { alert('Sipariş numarası otomatik kopyalanamadı.'); } });
+         }
+
+        document.addEventListener('DOMContentLoaded',()=>{
+             console.log("DOM Yüklendi (checkout).");
+             quantityInput = document.getElementById('quantity'); cryptoSelect = document.getElementById('crypto-select'); totalEl = document.getElementById('total-price'); errorEl = document.getElementById('stock-error'); confirmBtn = document.getElementById('confirm-payment-btn'); paymentSection = document.getElementById('payment-section'); walletAddressEl = document.getElementById('wallet-address'); basePriceEl = document.getElementById('base-price'); paymentAmountEl = document.getElementById('payment-amount'); qrcodeEl = document.getElementById('qrcode'); errorMessageEl = document.getElementById('error-message'); mainContainer = document.getElementById('main-container'); confirmationContainer = document.getElementById('confirmation-container'); orderNumberSpan = document.getElementById('order-number'); txidGroup = document.getElementById('txid-group'); const display = document.querySelector('#countdown');
+             if (!quantityInput || !cryptoSelect || !totalEl || !paymentSection || !walletAddressEl || !basePriceEl || !paymentAmountEl || !qrcodeEl || !confirmBtn || !display || !mainContainer || !confirmationContainer || !orderNumberSpan || !txidGroup) { console.error("Elementlerden biri bulunamadı!"); if (errorMessageEl) { errorMessageEl.innerText = "Sayfa tam yüklenemedi. Lütfen yenileyin."; errorMessageEl.style.display = 'block'; } return; }
+             try { if (typeof EXPIRATION_TIMESTAMP === 'number' && EXPIRATION_TIMESTAMP > 0) { startTimer(EXPIRATION_TIMESTAMP, display); } else { if(display) display.textContent = "Süre Hatası"; } } catch(timerError){ console.error("Timer hatası:", timerError); }
+             const stockStatusEl = document.getElementById('max-stock');
+             maxStock = parseInt(stockStatusEl.dataset.stock) || 0; if (!stockStatusEl.innerText.includes("Stokta Var")) { maxStock = 0; }
+             quantityInput.max = maxStock; // Input max değerini set et
+             const hasPaymentMethods = cryptoSelect && cryptoSelect.options.length > 1;
+             if (maxStock > 0 && hasPaymentMethods) { fetchInitialPrices(); } else if (maxStock <= 0) { if(quantityInput) quantityInput.disabled = true; if(cryptoSelect) cryptoSelect.disabled = true; const sellerNote = document.getElementById('seller-note'); if(sellerNote) sellerNote.disabled = true; if(totalEl) totalEl.innerText = ''; if(confirmBtn) confirmBtn.disabled = true; if(confirmBtn) confirmBtn.innerText = 'Stokta Ürün Yok'; } else { if(totalEl) totalEl.innerText = 'Ödeme yöntemi yok.'; if(cryptoSelect) cryptoSelect.disabled = true; if(confirmBtn) confirmBtn.disabled = true; if(confirmBtn) confirmBtn.innerText = 'Ödeme Yöntemi Yok'; }
+        });
+    </script>
+</body>
+</html>

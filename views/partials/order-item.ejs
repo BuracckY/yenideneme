@@ -1,0 +1,58 @@
+<div class="order-item <%= order.hasUnreadUserMessage ? 'has-unread' : '' %>">
+    <div class="archive-action-container">
+        <% if (typeof isArchived !== 'undefined' && !isArchived) { %>
+            <form action="/admin/archive-order/<%= order._id %>" method="POST" style="display:inline;">
+                 <button type="submit" class="archive-btn actions" title="Arşive Taşı">Arşivle</button>
+            </form>
+        <% } else if (typeof isArchived !== 'undefined' && isArchived) { %>
+            <form action="/admin/delete-archived-order/<%= order._id %>" method="POST" style="display:inline;" onsubmit="return confirm('Bu siparişi kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.');">
+                 <button type="submit" class="delete-btn actions" title="Kalıcı Olarak Sil">Sil</button>
+            </form>
+        <% } %>
+    </div>
+    <h3>Sipariş No: <%= order.orderNumber %></h3>
+    <p><strong>Ürün:</strong> <%= order.productName %> (x<%= order.quantity %>)</p>
+    <p><strong>Ödeme:</strong> <%= order.paymentInfo %></p>
+    
+    <% if (order.transactionId) { %>
+        <p style="font-size: 0.9em; margin-bottom: 10px;"> <strong>TxID:</strong> 
+            <code style="background: #444; padding: 2px 5px; border-radius: 3px; word-break: break-all; color: var(--text-light);"><%= order.transactionId %></code>
+        </p>
+    <% } %>
+    <form action="/admin/update-order-status" method="POST" style="display: flex; gap: 10px; align-items: center; margin: 10px 0;">
+        <input type="hidden" name="orderId" value="<%= order._id %>">
+        <label for="status-<%= order._id %>" style="font-size: 0.9em; margin: 0;">Durum:</label>
+        <select id="status-<%= order._id %>" name="newStatus" style="flex-grow: 1;">
+            <option value="Beklemede" <%= order.status === 'Beklemede' ? 'selected' : '' %>>Beklemede</option>
+            <option value="Tamamlandı" <%= order.status === 'Tamamlandı' ? 'selected' : '' %>>Ödeme Onaylandı</option>
+            <option value="İptal" <%= order.status === 'İptal' ? 'selected' : '' %>>İptal Edildi</option>
+        </select>
+        <button type="submit" class="update-btn actions">Güncelle</button>
+    </form>
+
+    <div class="order-messages">
+        <% if (order.messages && order.messages.length > 0) { %>
+            <% order.messages.forEach(msg => { %>
+                <div class="message-item">
+                  <% if (msg.sender === 'user') { %>
+                      <span style="color:var(--link-blue); font-weight:bold;">Kullanıcı:</span>
+                      <span style="color: var(--text-light); margin-left: 5px;"><%= msg.text %></span>
+                  <% } else if (msg.sender === 'admin') { %>
+                      <span style="color:var(--green); font-weight:bold;">Siz:</span>
+                      <span style="color: var(--text-light); margin-left: 5px;"><%= msg.text %></span>
+                  <% } else { %>
+                      <span><%= msg.text %></span>
+                  <% } %>
+                  <span style="display:block; font-size: 0.8em; color: var(--text-muted); margin-top: 3px;">
+                      <%= new Date(msg.timestamp || Date.now()).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year:'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                  </span>
+                </div>
+            <% }) %>
+        <% } else { %><div class="message-item"><span style="color: var(--text-muted);">Mesaj yok.</span></div><% } %>
+    </div>
+    <form action="/admin/send-message" method="POST" class="reply-form">
+        <input type="hidden" name="orderId" value="<%= order._id %>">
+        <input type="text" name="adminReply" placeholder="Kullanıcıya yanıt yaz..." required>
+        <button type="submit">Gönder</button>
+    </form>
+</div>
